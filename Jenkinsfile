@@ -1,9 +1,15 @@
 pipeline {
   agent any
 
+  triggers {
+    // Poll GitHub every 2 minutes for changes
+    pollSCM('H/2 * * * *')
+  }
+
   environment {
     DOCKER_IMAGE = "${env.DOCKER_IMAGE ?: 'mokesh17/todo-app'}"
-    APP_VERSION = "${env.APP_VERSION ?: 'v1.1'}"
+    // Auto-detect version from git tag or use branch name
+    APP_VERSION = "${env.APP_VERSION ?: (env.GIT_TAG_NAME ?: env.GIT_BRANCH.replaceAll('origin/', '').replaceAll('/', '-'))}"
     REGISTRY = "docker.io"
   }
 
