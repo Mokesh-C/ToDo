@@ -3,24 +3,82 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>To-Do App V0.9</title>
-    <style>
-      body { font-family: Arial, sans-serif; max-width: 700px; margin: 40px auto; }
-      .task { padding: 8px; border-bottom: 1px solid #eee; }
-      .done { text-decoration: line-through; color: #888 }
-    </style>
+    <title>To-Do App V1.1</title>
+    <script src="https://cdn.tailwindcss.com"></script>
   </head>
-  <body>
-    <h1>To-Do App V0.9</h1>
-    <div id="tasks">Loading…</div>
+
+  <body class="bg-slate-50 min-h-screen flex items-center justify-center p-6">
+    <div class="w-full max-w-2xl">
+      <header class="mb-6">
+        <h1 class="text-3xl font-bold text-slate-800">To-Do App</h1>
+        <p class="text-sm text-slate-500">Simple, file-backed To‑Do for CI/CD demos</p>
+      </header>
+
+      <section class="bg-white shadow rounded-lg p-6">
+        <div class="flex gap-3 items-center mb-4">
+          <input id="newTask" type="text" placeholder="Add a new task..." class="flex-1 border border-slate-200 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400" />
+          <button id="addBtn" class="bg-sky-600 text-white px-4 py-2 rounded hover:bg-sky-700">Add</button>
+        </div>
+
+        <div id="tasks" class="space-y-2 text-slate-700">Loading…</div>
+      </section>
+
+      <footer class="mt-4 text-xs text-slate-500 text-right">Version: V1.1 — Data stored in <code class="bg-slate-100 px-1 rounded">data/tasks.json</code></footer>
+    </div>
 
     <script>
+      function taskHtml(t) {
+        return `
+          <div class="flex items-center justify-between p-3 border rounded hover:bg-slate-50" data-id="${t.id}">
+            <div class="flex items-center gap-3">
+              <input type="checkbox" class="cb h-4 w-4" ${t.completed ? 'checked' : ''} />
+              <div>
+                <div class="text-sm ${t.completed ? 'line-through text-slate-400' : 'text-slate-800'}">${escapeHtml(t.title)}</div>
+                <div class="text-xs text-slate-400">#${t.id}</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button class="del text-red-500 hover:text-red-700">Delete</button>
+            </div>
+          </div>
+        `;
+      }
+
+      function escapeHtml(s) {
+        return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+      }
+
       async function load() {
         const res = await fetch('/api/tasks');
         const tasks = await res.json();
         const el = document.getElementById('tasks');
-        el.innerHTML = tasks.map(t => `<div class="task ${t.completed ? 'done' : ''}">${t.title}</div>`).join('');
+        if (!tasks.length) el.innerHTML = '<div class="text-sm text-slate-500">No tasks yet. Add one above.</div>';
+        else el.innerHTML = tasks.map(taskHtml).join('');
+
+        document.querySelectorAll('.cb').forEach(cb => cb.addEventListener('change', async (e) => {
+          const id = e.target.closest('[data-id]').dataset.id;
+          await fetch('/api/tasks/' + id, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ completed: e.target.checked }) });
+          load();
+        }));
+
+        document.querySelectorAll('.del').forEach(btn => btn.addEventListener('click', async (e) => {
+          const id = e.target.closest('[data-id]').dataset.id;
+          await fetch('/api/tasks/' + id, { method: 'DELETE' });
+          load();
+        }));
       }
+
+      document.getElementById('addBtn').addEventListener('click', async () => {
+        const v = document.getElementById('newTask').value.trim();
+        if (!v) return;
+        await fetch('/api/tasks', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ title: v }) });
+        document.getElementById('newTask').value = '';
+        load();
+      });
+
+      // allow Enter to submit
+      document.getElementById('newTask').addEventListener('keydown', (e) => { if (e.key === 'Enter') document.getElementById('addBtn').click(); });
+
       load();
     </script>
   </body>
