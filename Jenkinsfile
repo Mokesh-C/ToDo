@@ -58,8 +58,8 @@ pipeline {
               sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
               sh "docker push ${DOCKER_IMAGE}:${APP_VERSION}"
             } else {
-              // On Windows, use docker login with --password-stdin via PowerShell
-              bat "powershell -Command \"$Env:DOCKER_PASS='${DOCKER_PASS}'; echo $Env:DOCKER_PASS | docker login -u ${DOCKER_USER} --password-stdin\""
+              // On Windows, use echo and pipe to docker login
+              bat "echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin"
               bat "docker push %DOCKER_IMAGE%:%APP_VERSION%"
             }
           }
