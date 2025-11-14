@@ -2,8 +2,8 @@ pipeline {
   agent any
 
   environment {
-    DOCKER_IMAGE = "${env.DOCKER_IMAGE ?: 'myname/todo-app'}"
-    APP_VERSION = "${env.APP_VERSION ?: 'v0.9'}"
+    DOCKER_IMAGE = "${env.DOCKER_IMAGE ?: 'mokesh17/todo-app'}"
+    APP_VERSION = "${env.APP_VERSION ?: 'v1.1'}"
     REGISTRY = "docker.io"
   }
 
