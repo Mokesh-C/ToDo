@@ -34,28 +34,28 @@ async function loadTasks() {
     } catch (err) {
         // If file doesn't exist or invalid, seed defaults and save
         tasks = [
-            { 
-                id: 1, 
-                title: 'Buy groceries', 
-                completed: false, 
+            {
+                id: 1,
+                title: 'Buy groceries',
+                completed: false,
                 priority: 'high',
                 dueDate: '2024-12-01',
                 category: 'personal',
                 createdAt: new Date().toISOString()
             },
-            { 
-                id: 2, 
-                title: 'Walk the dog', 
-                completed: true, 
+            {
+                id: 2,
+                title: 'Walk the dog',
+                completed: true,
                 priority: 'medium',
                 dueDate: null,
                 category: 'personal',
                 createdAt: new Date().toISOString()
             },
-            { 
-                id: 3, 
-                title: 'Read a book', 
-                completed: false, 
+            {
+                id: 3,
+                title: 'Read a book',
+                completed: false,
                 priority: 'low',
                 dueDate: '2024-12-15',
                 category: 'learning',
@@ -87,13 +87,13 @@ app.post('/api/tasks', (req, res) => {
     if (!title || typeof title !== 'string') {
         return res.status(400).json({ error: 'title is required' });
     }
-    
+
     const validPriorities = ['low', 'medium', 'high'];
     const taskPriority = validPriorities.includes(priority) ? priority : 'medium';
-    
-    const task = { 
-        id: nextId(), 
-        title: title.trim(), 
+
+    const task = {
+        id: nextId(),
+        title: title.trim(),
         completed: false,
         priority: taskPriority,
         dueDate: dueDate || null,
@@ -110,9 +110,9 @@ app.put('/api/tasks/:id', (req, res) => {
     const id = Number(req.params.id);
     const task = tasks.find(t => t.id === id);
     if (!task) return res.status(404).json({ error: 'not found' });
-    
+
     const { title, completed, priority, dueDate, category } = req.body;
-    
+
     if (title !== undefined) task.title = String(title);
     if (completed !== undefined) task.completed = Boolean(completed);
     if (priority !== undefined && ['low', 'medium', 'high'].includes(priority)) {
@@ -120,7 +120,7 @@ app.put('/api/tasks/:id', (req, res) => {
     }
     if (dueDate !== undefined) task.dueDate = dueDate;
     if (category !== undefined) task.category = category;
-    
+
     saveTasks().catch(err => console.error('saveTasks error', err));
     res.json(task);
 });

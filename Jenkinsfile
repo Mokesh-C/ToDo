@@ -8,9 +8,6 @@ pipeline {
 
   environment {
     DOCKER_IMAGE = "${env.DOCKER_IMAGE ?: 'mokesh17/todo-app'}"
-    // Auto-detect version from git tag or use branch name
-    APP_VERSION = "${env.APP_VERSION ?: (env.GIT_TAG_NAME ?: env.GIT_BRANCH.replaceAll('origin/', '').replaceAll('/', '-'))}"
-    REGISTRY = "docker.io"
   }
 
   stages {
@@ -47,11 +44,16 @@ pipeline {
     stage('Build Docker image') {
       steps {
         script {
+          // Get version from git tags
+          def appVersion
           if (isUnix()) {
-            sh "docker build -t ${DOCKER_IMAGE}:${APP_VERSION} ."
+            appVersion = sh(script: 'git describe --tags --abbrev=0 2>/dev/null || echo "latest"', returnStdout: true).trim()
+            sh "docker build -t ${DOCKER_IMAGE}:${appVersion} ."
           } else {
-            bat "docker build -t %DOCKER_IMAGE%:%APP_VERSION% ."
+            appVersion = bat(script: '@git describe --tags --abbrev=0 2>nul || echo latest', returnStdout: true).trim()
+            bat "docker build -t %DOCKER_IMAGE%:${appVersion} ."
           }
+          env.APP_VERSION = appVersion
         }
       }
     }
@@ -62,11 +64,11 @@ pipeline {
           script {
             if (isUnix()) {
               sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
-              sh "docker push ${DOCKER_IMAGE}:${APP_VERSION}"
+              sh "docker push ${DOCKER_IMAGE}:${env.APP_VERSION}"
             } else {
               // On Windows, use echo and pipe to docker login
               bat "echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin"
-              bat "docker push %DOCKER_IMAGE%:%APP_VERSION%"
+              bat "docker push %DOCKER_IMAGE%:${env.APP_VERSION}"
             }
           }
         }
@@ -77,15 +79,15 @@ pipeline {
       steps {
         script {
           if (isUnix()) {
-            sh "docker pull ${DOCKER_IMAGE}:${APP_VERSION} || true"
+            sh "docker pull ${DOCKER_IMAGE}:${env.APP_VERSION} || true"
             sh "docker stop todo || true"
             sh "docker rm todo || true"
-            sh "docker run -d -p 3000:3000 --name todo ${DOCKER_IMAGE}:${APP_VERSION}"
+            sh "docker run -d -p 3000:3000 --name todo ${DOCKER_IMAGE}:${env.APP_VERSION}"
           } else {
-            bat "docker pull %DOCKER_IMAGE%:%APP_VERSION% || exit 0"
+            bat "docker pull %DOCKER_IMAGE%:${env.APP_VERSION} || exit 0"
             bat "docker stop todo || exit 0"
             bat "docker rm todo || exit 0"
-            bat "docker run -d -p 3000:3000 --name todo %DOCKER_IMAGE%:%APP_VERSION%"
+            bat "docker run -d -p 3000:3000 --name todo %DOCKER_IMAGE%:${env.APP_VERSION}"
           }
         }
       }

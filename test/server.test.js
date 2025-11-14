@@ -79,8 +79,8 @@ describe('V1.2 - API with new features (file persistence)', () => {
         // Update it with new V1.2 features
         const updateRes = await request(app)
             .put(`/api/tasks/${taskId}`)
-            .send({ 
-                priority: 'high', 
+            .send({
+                priority: 'high',
                 dueDate: '2024-12-31',
                 category: 'work'
             });
@@ -96,11 +96,11 @@ describe('V1.2 - API with new features (file persistence)', () => {
         await new Promise(r => setTimeout(r, 200));
         const exists = fs.existsSync(DATA_FILE);
         expect(exists).toBe(true);
-        
+
         try {
             const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
             expect(Array.isArray(data)).toBe(true);
-            
+
             // Check if V1.2 features are saved
             const v12Tasks = data.filter(t => t.priority && t.category);
             expect(v12Tasks.length).toBeGreaterThan(0);
