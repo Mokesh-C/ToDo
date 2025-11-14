@@ -1,6 +1,6 @@
 {
   "name": "todo-app",
-  "version": "0.9.0",
+  "version": "1.2.0",
   "description": "Simple To-Do App for CI/CD demos (V0.9)",
   "main": "src/server.js",
   "scripts": {
